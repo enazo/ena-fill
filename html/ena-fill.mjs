@@ -254,6 +254,7 @@ const findFillPath = (x, y, distance) => {
 		let allPointAndIndexs = [];
         
 
+		// 新增的前进点前进方向总是不对 todo
 		for(let pointIndex = 0; pointIndex < points.length; pointIndex++) {
 			const nextPointIndex = (pointIndex + 1) % points.length;
 			if(!stopPointIndexs.includes(pointIndex) && !stopPointIndexs.includes(nextPointIndex)) {
