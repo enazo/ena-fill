@@ -79,7 +79,7 @@ const logs = [["width",[2]],
 const width = 640;
 const height = 480;
 
-const devicePixelRatio = 3;
+const devicePixelRatio = 2;
 
 const canvas = document.createElement("canvas");
 canvas.width = width * devicePixelRatio;
@@ -108,6 +108,10 @@ fillCanvas.width = width * devicePixelRatio;
 fillCanvas.height = height * devicePixelRatio;
 document.body.appendChild(fillCanvas);
 
+fillCanvas.style.pointerEvents = "none";
+fillCanvas.style.position = "relative";
+fillCanvas.style.zIndex = 2;
+
 const fillCtx = fillCanvas.getContext("2d");
 
 fillCtx.transform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
@@ -120,6 +124,8 @@ fillCtx.lineJoin = "round";
 fillCtx.lineCap = "round";
 
 fillCtx.globalAlpha = 0.5;
+
+fillCtx.font = '3px sans-serif';
 // 画在背后
 fillCtx.globalCompositeOperation = "destination-over";
 
@@ -211,8 +217,12 @@ const isBoundary = (x, y) => {
 };
 
 // 初始增生力
-const stepAngle = Math.PI / 6;
+const stepAngle = Math.PI / 48;
 const fertility = 8;
+const stepSize = 2;
+
+const newPointFertility = 2;
+const newPointExpansionForce = 2;
 
 
 import { getMiddlePoint, getMiddlePointAngleLeft, getMiddlePointAngleRight } from "./point-funcs.mjs";
@@ -229,7 +239,6 @@ const findFillPath = (x, y, distance) => {
     
     let iterations = 0;
     const maxIterations = distance;
-    const stepSize = 1;
 	const expansionForce = distance / 10;
     
     // 初始化点,从中心点开始向四周扩散
@@ -256,32 +265,67 @@ const findFillPath = (x, y, distance) => {
 
 		// 新增的前进点前进方向总是不对 todo
 		for(let pointIndex = 0; pointIndex < points.length; pointIndex++) {
+			const prevPointIndex = (pointIndex - 1 + points.length) % points.length;
 			const nextPointIndex = (pointIndex + 1) % points.length;
-			if(!stopPointIndexs.includes(pointIndex) && !stopPointIndexs.includes(nextPointIndex)) {
-				continue;
-			}
 
 			const point = points[pointIndex];
+			const prevPoint = points[prevPointIndex];
 			const nextPoint = points[nextPointIndex];
-				
-			const middlePoint = getMiddlePoint(point, nextPoint);
-			middlePoint.angle = getMiddlePointAngleLeft(point, nextPoint);
 
-			middlePoint.fertility = 4;
-			middlePoint.expansionForce = 1;
-			allPointAndIndexs.push({
-				point: middlePoint,
-				pointIndex: pointIndex + 1,
-			});
 
-		}
+			// 上一轮被停止的点
+			if( stopPointIndexs.includes(pointIndex) ) {
+				if(nextPoint.expansionForce > 0) {
 
-		for(let allPointAndIndexsIndex = allPointAndIndexs.length - 1; allPointAndIndexsIndex >= 0; allPointAndIndexsIndex--) {
-			const { point, pointIndex } = allPointAndIndexs[allPointAndIndexsIndex];
-			points.splice(pointIndex, 0, point);
+					
+					const point = points[pointIndex];
+					const nextPoint = points[nextPointIndex];
+						
+					const middlePoint = getMiddlePoint(point, nextPoint);
+
+					middlePoint.angle = getMiddlePointAngleRight(nextPoint,point);
+
+
+					middlePoint.fertility = newPointFertility;
+					middlePoint.expansionForce = newPointExpansionForce;
+					allPointAndIndexs.push({
+						point: middlePoint,
+						pointIndex: nextPointIndex,
+					});
+				}
+
+				if(prevPoint.expansionForce > 0) {
+					const point = points[pointIndex];
+					const prevPoint = points[prevPointIndex];
+						
+					const middlePoint = getMiddlePoint(point, prevPoint);
+
+					middlePoint.angle = getMiddlePointAngleRight(point, prevPoint);
+
+					middlePoint.fertility = newPointFertility;
+					middlePoint.expansionForce = newPointExpansionForce;
+					allPointAndIndexs.push({
+						point: middlePoint,
+						pointIndex: pointIndex,
+					});
+				}
+			}
+
 		}
 
 		stopPointIndexs = [];
+		
+		allPointAndIndexs = allPointAndIndexs.sort((a, b) => {
+			return b.pointIndex - a.pointIndex;
+		});
+
+		console.log('allPointAndIndexs', allPointAndIndexs);
+
+		for(let allPointAndIndexsIndex = 0; allPointAndIndexsIndex < allPointAndIndexs.length; allPointAndIndexsIndex++) {
+
+			const { point, pointIndex } = allPointAndIndexs[allPointAndIndexsIndex];
+			points.splice(pointIndex, 0, point);
+		}
 
         // 更新每个点的位置
         for(let pointIndex = 0; pointIndex < points.length; pointIndex++) {
@@ -292,6 +336,16 @@ const findFillPath = (x, y, distance) => {
             const nextX = point.x + Math.cos(point.angle) * stepSize;
             const nextY = point.y + Math.sin(point.angle) * stepSize;
 
+
+			// fillCtx.fillStyle = 'green';
+			// fillCtx.textAlign = 'left';
+			// fillCtx.fillText(Math.ceil(point.angle * (180/Math.PI)), point.x, point.y);
+
+			// fillCtx.fillStyle = 'blue';
+			// fillCtx.textAlign = 'right';
+			// fillCtx.fillText(pointIndex, point.x, point.y);
+
+			fillCtx.fillStyle = 'red';
             // 如果扩张力为0则跳过
             if(point.expansionForce <= 0) {
                 // 减少相邻点的扩张力
@@ -306,11 +360,18 @@ const findFillPath = (x, y, distance) => {
             
             // 检查是否碰到边界
             if(!isInBounds(nextX, nextY) || isBoundary(nextX, nextY)) {
+
+				if(point.expansionForce > 0) {
+					stopPointIndexs.push(pointIndex);
+				}
+
                 // 碰到边界时:
                 point.expansionForce = 0; // 清零当前点的扩张力
 
-				stopPointIndexs.push(pointIndex);
 				point.fertility = 0;
+				
+				point.x = nextX;
+				point.y = nextY;
                 continue;
             }
             

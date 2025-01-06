@@ -1,0 +1,67 @@
+<div></div>
+
+<script>
+const canvas = document.createElement('canvas');
+document.body.appendChild(canvas);
+
+canvas.style.boxShadow = '0 0 0 2px #000';
+canvas.style.backgroundColor = '#999';
+const ctx = canvas.getContext('2d');
+canvas.width = 800;
+canvas.height = 800;
+
+
+
+const beforePoint = {
+	x: 100,
+	y: 100,
+};
+
+
+ctx.fillStyle = 'red';
+ctx.fillRect(beforePoint.x, beforePoint.y, 2, 2);
+
+
+const nextPoint = {
+	x: 300,
+	y: 300
+};
+
+ctx.fillStyle = 'blue';
+ctx.fillRect(nextPoint.x, nextPoint.y, 2, 2);
+
+
+
+const middlePoint = {
+	x: (beforePoint.x + nextPoint.x) / 2,
+	y: (beforePoint.y + nextPoint.y) / 2
+};
+
+ctx.fillStyle = 'green';
+ctx.fillRect(middlePoint.x, middlePoint.y, 2, 2);
+
+
+const angle = Math.atan2(nextPoint.y - beforePoint.y, nextPoint.x - beforePoint.x);
+
+const angle90 = angle + Math.PI / 2;
+const distance = 40;
+const stepPoint = {
+	x: middlePoint.x + distance * Math.cos(angle90),
+	y: middlePoint.y + distance * Math.sin(angle90)
+};
+
+ctx.fillStyle = 'yellow';
+ctx.fillRect(stepPoint.x, stepPoint.y, 2, 2);
+
+
+const angle270 = angle - Math.PI / 2;
+const stepPoint2 = {
+	x: middlePoint.x + distance * Math.cos(angle270),
+	y: middlePoint.y + distance * Math.sin(angle270)
+};
+
+ctx.fillStyle = 'purple';
+ctx.fillRect(stepPoint2.x, stepPoint2.y, 2, 2);
+
+
+</script>

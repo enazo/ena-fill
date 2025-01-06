@@ -13,12 +13,12 @@ export function getMiddlePointAngleRight(prevPoint, nextPoint) {
 	// nextPoint 是前进方向，我需要确保获取到前进方向的右侧角度
 	const angle = Math.atan2(nextPoint.y - middlePoint.y, nextPoint.x - middlePoint.x);
 	console.log(angle);
-	return angle + Math.PI / 2;
+	return (angle + 2.5 * Math.PI) % (2 * Math.PI);
 }
 
 export function getMiddlePointAngleLeft(prevPoint, nextPoint) {
 	const middlePoint = getMiddlePoint(prevPoint, nextPoint);
 	// nextPoint 是前进方向，我需要确保获取到前进方向的左侧角度
 	const angle = Math.atan2(middlePoint.y - nextPoint.y, middlePoint.x - nextPoint.x);
-	return angle - Math.PI / 2;
+	return (angle - Math.PI / 2) % (2 * Math.PI);
 }
