@@ -24,7 +24,7 @@ const newPointFertility = 20;
 const newPointExpansionForce = 200;
 
 // 扩张力距离系数
-const expansionForceDistance = 0.1;
+const expansionForceDistance = 2;
 
 // 最小扩张距离
 const minExpansionDistance = 0.2;
@@ -240,7 +240,7 @@ const findFillPath = (x, y, distance) => {
     
     
     let iterations = 0;
-    const maxIterations = distance;
+    const maxIterations = distance * 6;
 	const expansionForce = distance / expansionForceDistance;
     
     // 初始化点,从中心点开始向四周扩散
